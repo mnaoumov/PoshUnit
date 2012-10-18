@@ -56,8 +56,7 @@ function Invoke-PoshUnit
         }
         catch
         {
-            Write-Host "Processing file '$testFixtureFile' failed" -ForegroundColor Red
-            $_
+            Report-Error "Processing file '$testFixtureFile' failed" $_
         }
     }
 
@@ -75,9 +74,35 @@ function Report-Error
         [System.Management.Automation.ErrorRecord] $Error
     )
 
-    [string] $errorString = $Error | Out-String
+    $errorString = Prepare-ErrorString $Error
 
     Write-Host "$Message`n$errorString`n" -ForegroundColor Red
+}
+
+function Prepare-ErrorString
+{
+    [CmdletBinding()]
+    param
+    (
+        [System.Management.Automation.ErrorRecord] $Error
+    )
+
+    $invocationInfo = $Error.InvocationInfo
+
+    $exception = $Error.Exception
+
+    if ($exception -is [System.Management.Automation.MethodInvocationException])
+    {
+        $exception = $exception.InnerException
+    }
+
+    $errorMessage = @"
+{0}
+An error occured at line {1} char {2} in {3}
+  {4}
+"@ -f $exception.Message, $invocationInfo.ScriptLineNumber, $invocationInfo.OffsetInLine, $invocationInfo.ScriptName.Trim(), $invocationInfo.Line.Trim()
+
+    $errorMessage;
 }
 
 function Test-Fixture

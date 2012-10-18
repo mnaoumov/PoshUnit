@@ -11,9 +11,14 @@ $PSScriptRoot = $MyInvocation.MyCommand.Path | Split-Path
 
 Import-Module "$PSScriptRoot\..\PoshUnit.psm1"
 
-function HelperFunction
+function Increment
 {
-    return $true
+    param
+    (
+        [int] $Value
+    )
+
+    $Value + 1
 }
 
 Test-Fixture "NUnit tests" `
@@ -41,15 +46,15 @@ Test-Fixture "NUnit tests" `
         }
     ),
     (
-        Test "2 + 2 = 5" `
+        Test "Failing test 2 + 2 = 5" `
         {
             $Assert::That(2 + 2, $Is::EqualTo(5))
         }
     ),
     (
-        Test "Try Helper Function" `
+        Test "Invoke Helper Function" `
         {
-            $Assert::That((HelperFunction), $Is::True)
+            $Assert::That((Increment 123), $Is::EqualTo(124))
         }
     ),
     (
