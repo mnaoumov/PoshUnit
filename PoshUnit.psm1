@@ -19,7 +19,8 @@ function Clear-PoshUnitContext
         TestFixturesFailed = 0;
         InsideInvokePoshUnit = $false;
         ShowStackTrace = $false;
-        ShowError = $true
+        ShowErrors = $true;
+        ShowOutput = $false;
     }
 }
 
@@ -31,8 +32,9 @@ function Invoke-PoshUnit
         [string] $Path = ".",
         [string] $Filter = "*Tests.ps1",
         [bool] $Recurse = $true,
-        [bool] $ShowError = $true,
-        [switch] $ShowStackTrace
+        [bool] $ShowOutput = $false,
+        [bool] $ShowErrors = $true,
+        [bool] $ShowStackTrace = $false
     )
 
     $global:PoshUnitContext = New-Object PSObject -Property `
@@ -41,8 +43,9 @@ function Invoke-PoshUnit
         TestsFailed = 0;
         TestFixturesFailed = 0;
         InsideInvokePoshUnit = $true;
-        ShowError = $ShowError;
-        ShowStackTrace = $ShowStackTrace
+        ShowErrors = $ShowErrors;
+        ShowStackTrace = $ShowStackTrace;
+        ShowOutput = $ShowOutput
     }
 
     $testFixtureFiles = Get-ChildItem -Path $Path -Filter $Filter -Recurse:$Recurse | `
@@ -82,9 +85,8 @@ function Report-Error
         [System.Management.Automation.ErrorRecord] $Error
     )
 
-
     $message = $Message
-    if ($global:PoshUnitContext.ShowError)
+    if (($global:PoshUnitContext.ShowErrors) -and ($Error -ne $null))
     {
         $message += "`n$(Prepare-ErrorString $Error)"
     }
@@ -118,6 +120,20 @@ function Prepare-ErrorString
     $errorMessage;
 }
 
+function Invoke-Script
+{
+    param
+    (
+        [ScriptBlock] $ScriptBlock
+    )
+
+    $result = . $ScriptBlock
+    if ($global:PoshUnitContext.ShowOutput)
+    {
+        $result
+    }
+}
+
 function Test-Fixture
 {
     [CmdletBinding()]
@@ -138,62 +154,92 @@ function Test-Fixture
 
     Write-Host "Test Fixture '$Name'" -ForegroundColor Yellow
 
+    $isTestFixtureFailed = $false
+    $testsPassed = 0
+    $testsFailed = 0
+
     try
     {
-        . $TestFixtureSetUp | Out-Null
+        . Invoke-Script $TestFixtureSetUp
     }
     catch
     {
-        Report-Error "TestFixtureSetUp failed" $_
-        $global:PoshUnitContext.TestFixturesFailed++
-        return
+        Report-Error "TestFixtureSetUp failed. All tests within this test fixture will be marked as failed as well" $_
+        $isTestFixtureFailed = $true
     }
 
     foreach ($test in $Tests)
     {
-        try
+        $isTestPassed = $false
+
+        Write-Host "`n    Test '$($test.Name)'" -ForegroundColor Yellow
+        if ($isTestFixtureFailed)
         {
-            . $SetUp | Out-Null
-        }
-        catch
-        {
-            Report-Error "    SetUp failed" $_
+            Report-Error "Test fixture failed"
+            $testsFailed++
             continue
         }
 
         try
         {
-            . $test.Method | Out-Null
-            Write-Host "    $($test.Name)" -ForegroundColor Green
-            $global:PoshUnitContext.TestsPassed++
+            . Invoke-Script $SetUp
         }
         catch
         {
-            Report-Error "    $($test.Name)" $_
-            $global:PoshUnitContext.TestsFailed++
+            Report-Error "    SetUp failed. Test will be marked as failed as well" $_
+            $testsFailed++
+            continue
+        }
+
+        try
+        {
+            . Invoke-Script $test.Method
+            Write-Host "    Passed" -ForegroundColor Green
+            $isTestPassed = $true
+        }
+        catch
+        {
+            Report-Error "    Failed" $_
         }
         finally
         {
             try
             {
-                . $TearDown | Out-Null
+                . Invoke-Script $TearDown
+                if ($isTestPassed)
+                {
+                    $testsPassed++
+                }
             }
             catch
             {
-                Report-Error "    TearDown failed" $_
+                Report-Error "    TearDown failed. Test will be marked as failed as well" $_
+                $testsFailed++
             }
         }
     }
+
+    Write-Host ""
     
     try
     {
-        . $TestFixtureTearDown | Out-Null
+        . Invoke-Script $TestFixtureTearDown
     }
     catch
     {
-        Report-Error "    TestFixtureTearDown failed" $_
-        $global:PoshUnitContext.TestFixturesFailed++
+        Report-Error "TestFixtureTearDown failed. All tests within this test fixture will be marked as failed" $_
+        $isTestFixtureFailed = $true
     }
+
+    if ($isTestFixtureFailed)
+    {
+        $global:PoshUnitContext.TestFixturesFailed++
+        $testsFailed += $testsPassed
+        $testsPassed = 0
+    }
+
+    $global:PoshUnitContext.TestsPassed += $testsPassed
+    $global:PoshUnitContext.TestsFailed += $testsFailed
 
     Write-Host ""
 
