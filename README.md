@@ -5,4 +5,6 @@ Yet another PowerShell Unit testing framework
 
 It designed to write **NUnit**-like tests.
 
-See **Tests\NUnit.Tests.ps1** for example of syntax
+    $Assert::That(2 + 2, $Is::EqualTo(4))
+
+See **Tests\NUnit.Tests.ps1** for more examples
