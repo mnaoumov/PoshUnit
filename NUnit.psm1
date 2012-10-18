@@ -46,7 +46,7 @@ $Throws = [NUnit.Framework.Throws]
 
 function Test-Delegate
 {
-    [OutputType([NUnit.Framework.TestDelegate])]
+    [OutputType({ [NUnit.Framework.TestDelegate] })]
     [CmdletBinding()]
     param
     (
