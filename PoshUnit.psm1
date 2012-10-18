@@ -20,7 +20,8 @@ function Invoke-PoshUnit
         [bool] $Recurse = $true
     )
 
-    $testFixtureFiles = Get-ChildItem -Path $Path -Filter $Filter -Recurse:$Recurse
+    $testFixtureFiles = Get-ChildItem -Path $Path -Filter $Filter -Recurse:$Recurse | `
+        Select-Object -ExpandProperty FullName
 
     if (-not $testFixtureFiles)
     {
@@ -30,16 +31,30 @@ function Invoke-PoshUnit
 
     foreach ($testFixtureFile in $testFixtureFiles)
     {
+
+        Write-Verbose "Processing file '$testFixtureFile'"
         try
         {
-            & $testFixtureFile.FullName
+            & $testFixtureFile
         }
         catch
         {
-            Write-Host "Processing of file '$testFixtureFile' failed" -ForegroundColor Red
+            Write-Host "Processing file '$testFixtureFile' failed" -ForegroundColor Red
             $_
         }
     }
+}
+
+function Report-Error
+{
+    [CmdletBinding()]
+    param
+    (
+        [string] $Message,
+        [System.Automation.Management.ErrorAction] $Error
+    )
+
+    Write-Host "$Message`n$Error" -ForegroundColor Red
 }
 
 function Test-Fixture
@@ -55,16 +70,15 @@ function Test-Fixture
         [PSObject[]] $Tests = @()
     )
 
-    "Processing Test Fixture '$Name'"
+    Write-Host "Test Fixture '$Name'" -ForegroundColor Yellow
 
     try
     {
-        . $TestFixtureSetUp
+        . $TestFixtureSetUp | Out-Null
     }
     catch
     {
-        "TestFixtureSetUp failed"
-        $_
+        Report-Error "TestFixtureSetUp failed" $_
         return
     }
 
@@ -72,51 +86,46 @@ function Test-Fixture
     {
         try
         {
-            . $SetUp
+            . $SetUp | Out-Null
         }
         catch
         {
-            "SetUp failed"
-            $_
+            Report-Error "    SetUp failed" $_
             continue
         }
 
-        "Runnning test '$($test.Name)'"
-
         try
         {
-            . $test.Method
-            "Test '$($test.Name)' succeded"
+            . $test.Method | Out-Null
+            Write-Host "    $($test.Name)" -ForegroundColor Green
         }
         catch
         {
-            "Test '$($test.Name)' failed"
-            $_
+            Report-Error "    $($test.Name)" $_
         }
         finally
         {
             try
             {
-                . $TearDown
+                . $TearDown | Out-Null
             }
             catch
             {
-                "SetUp failed"
-                $_
+                Report-Error "    TearDown failed" $_
             }
         }
     }
     
     try
     {
-        . $TestFixtureTearDown
+        . $TestFixtureTearDown | Out-Null
     }
     catch
     {
-        "TestFixtureTearDown failed"
-        $_
-        return
+        Report-Error "    TestFixtureTearDown failed" $_
     }
+
+    Write-Host ""
 }
 
 function Test
