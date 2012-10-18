@@ -21,6 +21,39 @@ function Increment
     $Value + 1
 }
 
+function Function1
+{
+    param
+    (
+        [int] $Param1
+    )
+    
+    Function2 $Param1 456
+}
+
+function Function2
+{
+    param
+    (
+        [int] $Param1,
+        [int] $Param2
+    )
+
+    Function3 $Param1 $Param2 789
+}
+
+function Function3
+{
+    param
+    (
+        [int] $Param1,
+        [int] $Param2,
+        [int] $Param3
+    )
+
+    throw "Fail $Param1 $Param2 $Param3"
+}
+
 Test-Fixture "NUnit tests" `
     -TestFixtureSetUp `
     {
@@ -61,5 +94,11 @@ Test-Fixture "NUnit tests" `
         Test "Test SetUp & TearDown" `
         {
             $Assert::That($a, $Is::EqualTo("TestFixtureSetUp SetUp TearDown SetUp TearDown SetUp TearDown SetUp"))
+        }
+    ),
+    (
+        Test "Failure in Helper Function" `
+        {
+            Function1 123
         }
     )

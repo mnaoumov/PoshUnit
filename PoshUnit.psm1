@@ -16,7 +16,10 @@ function Clear-PoshUnitContext
     @{
         TestsPassed = 0;
         TestsFailed = 0;
-        InsideInvokePoshUnit = $false
+        TestFixturesFailed = 0;
+        InsideInvokePoshUnit = $false;
+        ShowStackTrace = $false;
+        ShowError = $true
     }
 }
 
@@ -27,14 +30,19 @@ function Invoke-PoshUnit
     (
         [string] $Path = ".",
         [string] $Filter = "*Tests.ps1",
-        [bool] $Recurse = $true
+        [bool] $Recurse = $true,
+        [bool] $ShowError = $true,
+        [switch] $ShowStackTrace
     )
 
     $global:PoshUnitContext = New-Object PSObject -Property `
     @{
         TestsPassed = 0;
         TestsFailed = 0;
-        InsideInvokePoshUnit = $true
+        TestFixturesFailed = 0;
+        InsideInvokePoshUnit = $true;
+        ShowError = $ShowError;
+        ShowStackTrace = $ShowStackTrace
     }
 
     $testFixtureFiles = Get-ChildItem -Path $Path -Filter $Filter -Recurse:$Recurse | `
@@ -74,9 +82,14 @@ function Report-Error
         [System.Management.Automation.ErrorRecord] $Error
     )
 
-    $errorString = Prepare-ErrorString $Error
 
-    Write-Host "$Message`n$errorString`n" -ForegroundColor Red
+    $message = $Message
+    if ($global:PoshUnitContext.ShowError)
+    {
+        $message += "`n$(Prepare-ErrorString $Error)"
+    }
+
+    Write-Host $message -ForegroundColor Red
 }
 
 function Prepare-ErrorString
@@ -96,11 +109,11 @@ function Prepare-ErrorString
         $exception = $exception.InnerException
     }
 
-    $errorMessage = @"
-{0}
-An error occured at line {1} char {2} in {3}
-  {4}
-"@ -f $exception.Message, $invocationInfo.ScriptLineNumber, $invocationInfo.OffsetInLine, $invocationInfo.ScriptName.Trim(), $invocationInfo.Line.Trim()
+    $errorMessage = "`n{0}`n{1}" -f $exception.Message, $invocationInfo.PositionMessage
+    if ($global:PoshUnitContext.ShowStackTrace)
+    {
+        $errorMessage += ("`nStack trace:`n{0}" -f $Error.ScriptStackTrace)
+    }
 
     $errorMessage;
 }
@@ -132,6 +145,7 @@ function Test-Fixture
     catch
     {
         Report-Error "TestFixtureSetUp failed" $_
+        $global:PoshUnitContext.TestFixturesFailed++
         return
     }
 
@@ -178,6 +192,7 @@ function Test-Fixture
     catch
     {
         Report-Error "    TestFixtureTearDown failed" $_
+        $global:PoshUnitContext.TestFixturesFailed++
     }
 
     Write-Host ""
@@ -208,9 +223,18 @@ function Test
 
 function Write-TestsSummary
 {
-    Write-Host ("Tests completed`nPassed: {0} Failed: {1}`n" -f $global:PoshUnitContext.TestsPassed, $global:PoshUnitContext.TestsFailed)
+    Write-Host ("Tests completed`nPassed: {0} Failed: {1}" -f $global:PoshUnitContext.TestsPassed, $global:PoshUnitContext.TestsFailed)
+    if ($global:PoshUnitContext.TestFixturesFailed -ne 0)
+    {
+        Write-Host ("Test fixtures failed: {0}" -f $global:PoshUnitContext.TestFixturesFailed)
+    }
+
+    Write-Host "`n"
 }
 
 Clear-PoshUnitContext
 
 Export-ModuleMember Invoke-PoshUnit, Test-Fixture, Test
+
+Export-ModuleMember -Variable Assert, Is, Has, Throws
+Export-ModuleMember Test-Delegate
