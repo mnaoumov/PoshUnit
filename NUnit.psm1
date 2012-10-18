@@ -8,7 +8,36 @@ param
 $script:ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-Import-Module "$PSScriptRoot\packages\NUnit.2.6.1\lib\nunit.framework.dll"
+$nunitAssembly = "$PSScriptRoot\packages\NUnit.2.6.1\lib\nunit.framework.dll"
+Import-Module $nunitAssembly
+
+Add-Type -Language CSharp -ReferencedAssemblies $nunitAssembly `
+@"
+using System;
+using System.Management.Automation;
+using NUnit.Framework;
+
+namespace PoshUnit
+{
+    public static class NUnitHelper
+    {
+        public static TestDelegate ToTestDelegate(ScriptBlock block)
+        {
+            return () =>
+                { 
+                    try
+                    {
+                        block.Invoke();
+                    }
+                    catch (RuntimeException e)
+                    {
+                        throw e.InnerException;
+                    }
+                };
+        }
+    }
+}
+"@
 
 $Assert = [NUnit.Framework.Assert]
 $Is = [NUnit.Framework.Is]
@@ -24,7 +53,7 @@ function Test-Delegate
         [ScriptBlock] $ScriptBlock
     )
 
-    [NUnit.Framework.TestDelegate] $ScriptBlock
+    [PoshUnit.NUnitHelper]::ToTestDelegate($ScriptBlock)
 }
 
 Export-ModuleMember -Variable Assert, Is, Has, Throws
