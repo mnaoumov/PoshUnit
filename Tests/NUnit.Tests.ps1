@@ -41,3 +41,6 @@ Test-NUnit { $Assert::That(3, $Is::GreaterThan(8)) }
 Test-NUnit { $Assert::That(3, $Is::GreaterThan(1).And.LessThan(5)) }
 Test-NUnit { $Assert::That(3, $Is::GreaterThan(1).And.LessThan(2)) }
 Test-NUnit { $Assert::That(@(1, 2, 3), $Has::Length.EqualTo(3)) }
+Test-NUnit { $Assert::That(@(1, 2, 3), $Has::Length.EqualTo(5)) }
+Test-NUnit { $Assert::That((Test-Delegate { 2 + 2 }), $Throws::Nothing) }
+Test-NUnit { $Assert::That((Test-Delegate { throw "Some exception" }), $Throws::Nothing) }
