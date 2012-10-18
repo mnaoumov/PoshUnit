@@ -10,6 +10,16 @@ Set-StrictMode -Version Latest
 
 Import-Module "$PSScriptRoot\NUnit.psm1"
 
+function Clear-PoshUnitContext
+{
+    $global:PoshUnitContext = New-Object PSObject -Property `
+    @{
+        TestsPassed = 0;
+        TestsFailed = 0;
+        InsideInvokePoshUnit = $false
+    }
+}
+
 function Invoke-PoshUnit
 {
     [CmdletBinding()]
@@ -19,6 +29,13 @@ function Invoke-PoshUnit
         [string] $Filter = "*Tests.ps1",
         [bool] $Recurse = $true
     )
+
+    $global:PoshUnitContext = New-Object PSObject -Property `
+    @{
+        TestsPassed = 0;
+        TestsFailed = 0;
+        InsideInvokePoshUnit = $true
+    }
 
     $testFixtureFiles = Get-ChildItem -Path $Path -Filter $Filter -Recurse:$Recurse | `
         Select-Object -ExpandProperty FullName
@@ -43,6 +60,10 @@ function Invoke-PoshUnit
             $_
         }
     }
+
+    Write-TestsSummary
+
+    Clear-PoshUnitContext
 }
 
 function Report-Error
@@ -51,7 +72,7 @@ function Report-Error
     param
     (
         [string] $Message,
-        [System.Automation.Management.ErrorAction] $Error
+        [System.Management.Automation.ErrorRecord] $Error
     )
 
     Write-Host "$Message`n$Error" -ForegroundColor Red
@@ -69,6 +90,11 @@ function Test-Fixture
         [ScriptBlock] $TearDown = {},
         [PSObject[]] $Tests = @()
     )
+
+    if (-not $global:PoshUnitContext.InsideInvokePoshUnit)
+    {
+        Clear-PoshUnitContext
+    }
 
     Write-Host "Test Fixture '$Name'" -ForegroundColor Yellow
 
@@ -98,10 +124,12 @@ function Test-Fixture
         {
             . $test.Method | Out-Null
             Write-Host "    $($test.Name)" -ForegroundColor Green
+            $global:PoshUnitContext.TestsPassed++
         }
         catch
         {
             Report-Error "    $($test.Name)" $_
+            $global:PoshUnitContext.TestsFailed++
         }
         finally
         {
@@ -126,6 +154,12 @@ function Test-Fixture
     }
 
     Write-Host ""
+
+    if (-not $global:PoshUnitContext.InsideInvokePoshUnit)
+    {
+        Write-TestsSummary
+        Clear-PoshUnitContext
+    }
 }
 
 function Test
@@ -144,5 +178,18 @@ function Test
         Method = $Method
     }
 }
+
+function Write-TestsSummary
+{
+    Write-Host ("Tests completed`nPassed: {0} Failed: {1}`n" -f $global:PoshUnitContext.TestsPassed, $global:PoshUnitContext.TestsFailed)
+
+    if ($global:PoshUnitContext.TestsFailed -ne 0)
+    {
+        $host.ShouldExit(1)
+        exit
+    }
+}
+
+Clear-PoshUnitContext
 
 Export-ModuleMember Invoke-PoshUnit, Test-Fixture, Test
