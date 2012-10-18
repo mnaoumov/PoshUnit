@@ -75,7 +75,9 @@ function Report-Error
         [System.Management.Automation.ErrorRecord] $Error
     )
 
-    Write-Host "$Message`n$Error" -ForegroundColor Red
+    [string] $errorString = $Error | Out-String
+
+    Write-Host "$Message`n$errorString`n" -ForegroundColor Red
 }
 
 function Test-Fixture
@@ -182,12 +184,6 @@ function Test
 function Write-TestsSummary
 {
     Write-Host ("Tests completed`nPassed: {0} Failed: {1}`n" -f $global:PoshUnitContext.TestsPassed, $global:PoshUnitContext.TestsFailed)
-
-    if ($global:PoshUnitContext.TestsFailed -ne 0)
-    {
-        $host.ShouldExit(1)
-        exit
-    }
 }
 
 Clear-PoshUnitContext
