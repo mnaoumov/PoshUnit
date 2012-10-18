@@ -10,7 +10,6 @@ Set-StrictMode -Version Latest
 $PSScriptRoot = $MyInvocation.MyCommand.Path | Split-Path
 
 Import-Module "$PSScriptRoot\..\NUnit.psm1"
-Import-Module "$PSScriptRoot\..\packages\NUnit.2.6.1\lib\nunit.framework.dll"
 
 function Test-NUnit
 {
