@@ -1,0 +1,3 @@
+If this file is present PoshUnit executed in a Dev mode
+
+If this file is not present PoshUnit executed in a Package mode

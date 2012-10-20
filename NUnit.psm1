@@ -8,10 +8,27 @@ param
 $script:ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-$nunitAssembly = "$PSScriptRoot\packages\NUnit.2.6.1\lib\nunit.framework.dll"
-Import-Module $nunitAssembly
+$packagesFolder = Resolve-Path (Join-Path $PSScriptRoot (if (Test-Path "$PSScriptRoot\PoshUnit.Dev.txt") { "packages" } else { ".."}))
 
-Add-Type -Language CSharp -ReferencedAssemblies $nunitAssembly `
+$nunitPackageFolder = Get-ChildItem $packages | `
+    Where-Object { $_.Name -match "^NUnit[.\d]+$" } | `
+    Select-Object -ExpandProperty FullName
+
+if (-not $nunitPackageFolder)
+{
+    throw "NUnit package folder is not found in '$packagesFolder'"
+}
+
+$nunitAssemblyFile = "$nunitPackageFolder\lib\nunit.framework.dll"
+
+if (-not (Test-Path $nunitAssemblyFile))
+{
+    throw "'$nunitAssemblyFile' is not found"
+}
+
+Import-Module $nunitAssemblyFile
+
+Add-Type -Language CSharp -ReferencedAssemblies $nunitAssemblyFile `
 @"
 using System;
 using System.Management.Automation;
