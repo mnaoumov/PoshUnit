@@ -29,7 +29,7 @@ function Invoke-PoshUnit
     [CmdletBinding()]
     param
     (
-        [string] $Path = ".",
+        [string] $Path = "Tests",
         [string] $Filter = "*.Tests.ps1",
         [bool] $Recurse = $true,
         [bool] $ShowOutput = $false,

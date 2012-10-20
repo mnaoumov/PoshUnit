@@ -90,7 +90,7 @@ Then run tests use
 
 **-Path**
 
-Default value: "."
+Default value: "Tests"
     
 **-Filter**
 
