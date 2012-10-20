@@ -4,15 +4,14 @@ Yet another PowerShell Unit testing framework
 
 It designed to write **NUnit**-like tests.
 
-    $Assert::That(2 + 2, $Is::EqualTo(4))
+Main features:
 
-See **Tests\NUnitSyntaxExample.ps1** for more examples
-
-
+* NUnit Assert class
+* Standard TestFixtureSetUp->SetUp->Test->TearDown->TestFixtureTearDown execution workflow
 
 ## To create test ##
 
-Create copy of **TestFixture.Snippet.ps1**
+Create *Tests\MyTestFixture.Tests.ps1* using snippet **Tests\TestFixture.Snippet.ps1** (see code below)
 
 	#requires -version 2.0
 	
@@ -60,36 +59,58 @@ Create copy of **TestFixture.Snippet.ps1**
 	        }
 	    )
 
+## NUnit Assert syntax ##
+
+PoshUnit natively supports the most used NUnit classes: Assert, Is, Has, Throws
+
+    $Assert::That(2 + 2, $Is::EqualTo(4))
+    $Assert::That(3, $Is::GreaterThan(2))
+    $Assert::That(3, $Is::GreaterThan(1).And.LessThan(5))
+    $Assert::That(@(1, 2, 3), $Has::Length.EqualTo(3))
+    $Assert::That((Test-Delegate { throw New-Object NotImplementedException }), $Throws::TypeOf([NotImplementedException])) }
 
 ## To run tests ##
 
-Import module first
+Execute
+
+    Invoke-Tests.ps1
+
+
+or if you want to have more control
+
+Import module
     
 	Import-Module path\PoshUnit.psm1
 
-Then run tests using
+Then run tests use
     
     Invoke-PoshUnit
 
-Parameters:
+***Optional parameters:***
 
-    -Path
-	 Default value: "."
+**-Path**
+
+Default value: "."
     
-	-Filter
-	Default value: "*.Tests.ps1"
+**-Filter**
 
-    -Recurse
-	Default value: $true
+Default value: "*.Tests.ps1"
 
-    -ShowOutput
-	Default value: $false
+**-Recurse**
 
-    -ShowErrors
-	Default value: $true
+Default value: $true
 
-    -ShowStackTrace
-	Default value: $false
+**-ShowOutput**
+
+Default value: $false
+
+**-ShowErrors**
+
+Default value: $true
+
+**-ShowStackTrace**
+
+Default value: $false
 
 
 ## Known issues ##
