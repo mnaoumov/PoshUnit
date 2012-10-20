@@ -9,6 +9,12 @@ It designed to write **NUnit**-like tests.
 * NUnit Assert class
 * Standard TestFixtureSetUp->SetUp->Test->TearDown->TestFixtureTearDown execution workflow
 
+## Installation ##
+
+Build using **Build-InstallPackage.ps1**.
+
+Copy content of folder **_InstallPackage** into your project.
+
 ## To create test ##
 
 Create *Tests\MyTestFixture.Tests.ps1* using snippet **Tests\TestFixture.Snippet.ps1**
