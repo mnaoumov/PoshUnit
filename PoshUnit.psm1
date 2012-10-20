@@ -30,7 +30,7 @@ function Invoke-PoshUnit
     param
     (
         [string] $Path = ".",
-        [string] $Filter = "*Tests.ps1",
+        [string] $Filter = "*.Tests.ps1",
         [bool] $Recurse = $true,
         [bool] $ShowOutput = $false,
         [bool] $ShowErrors = $true,
