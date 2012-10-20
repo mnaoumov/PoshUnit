@@ -8,7 +8,15 @@ param
 $script:ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-Import-Module "$PSScriptRoot\NUnit.psm1"
+
+$nunitModulePath = "$PSScriptRoot\NUnit.psm1"
+
+if (-not (Test-Path $nunitModulePath))
+{
+    throw "$nunitModulePath not found"
+}
+
+Import-Module $nunitModulePath
 
 function Clear-PoshUnitContext
 {
