@@ -4,43 +4,17 @@ Yet another PowerShell Unit testing framework
 
 It designed to write **NUnit**-like tests.
 
-Main features:
+## Main features ##
 
 * NUnit Assert class
 * Standard TestFixtureSetUp->SetUp->Test->TearDown->TestFixtureTearDown execution workflow
 
 ## To create test ##
 
-Create *Tests\MyTestFixture.Tests.ps1* using snippet **Tests\TestFixture.Snippet.ps1** (see code below)
+Create *Tests\MyTestFixture.Tests.ps1* using snippet **Tests\TestFixture.Snippet.ps1**
 
-    #requires -version 2.0
-    
-    [CmdletBinding()]
-    param
-    (
-    )
-    
-    $script:ErrorActionPreference = "Stop"
-    Set-StrictMode -Version Latest
-    $PSScriptRoot = $MyInvocation.MyCommand.Path | Split-Path
-    
-    # -----------------------------------------------------------------------------------------------------------
-    # This block is not mandatory. It is needed only if you want your TestFixture script to be self-testable
-    #
-    
-    $poshUnitFolder = if (Test-Path "$PSScriptRoot\..\PoshUnit.Dev.txt") { ".." } else { "..\packages\PoshUnit" }
-    $poshUnitModuleFile = Resolve-Path "$PSScriptRoot\$poshUnitFolder\PoshUnit.psm1"
-    
-    if (-not (Test-Path $poshUnitModuleFile))
-    {
-        throw "$poshUnitModuleFile not found"
-    }
+its main part is
 
-    Import-Module $poshUnitModuleFile
-    
-    #
-    # -----------------------------------------------------------------------------------------------------------
-       
     Test-Fixture "<Insert Test Fixture Name>" `
     -TestFixtureSetUp `
     {
@@ -86,16 +60,15 @@ PoshUnit natively supports the most used NUnit classes: Assert, Is, Has, Throws
 
 ## To run tests ##
 
-Execute
+Just execute
 
     Invoke-Tests.ps1
-
 
 or if you want to have more control
 
 Import module
     
-	Import-Module path\PoshUnit.psm1
+	Import-Module .\PoshUnit.psm1
 
 Then run tests use
     
