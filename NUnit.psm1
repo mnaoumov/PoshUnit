@@ -8,9 +8,10 @@ param
 $script:ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-$packagesFolder = Resolve-Path (Join-Path $PSScriptRoot (if (Test-Path "$PSScriptRoot\PoshUnit.Dev.txt") { "packages" } else { ".."}))
+$packagesFolder = if (Test-Path "$PSScriptRoot\PoshUnit.Dev.txt") { "packages" } else { ".." }
+$packagesFolder = Resolve-Path "$PSScriptRoot\$packagesFolder"
 
-$nunitPackageFolder = Get-ChildItem $packages | `
+$nunitPackageFolder = Get-ChildItem $packagesFolder | `
     Where-Object { $_.Name -match "^NUnit[.\d]+$" } | `
     Select-Object -ExpandProperty FullName
 
