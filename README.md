@@ -109,5 +109,5 @@ Default value: $false
 
 ## Known issues ##
 
-* **-ShowOutput $false** does not hide messages written by *Write-Host*
+* **-ShowOutput $false** does not hide messages written by *Write-Host*, *[System.Console]::WriteLine()*, *[System.Console]::Error.WriteLine()* and from standard error output of native apps
 * Source line shown for exception thrown by *Write-Error* is not correct
