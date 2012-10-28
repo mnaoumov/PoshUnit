@@ -64,6 +64,13 @@ PoshUnit natively supports the most used NUnit classes: Assert, Is, Has, Throws
     $Assert::That(@(1, 2, 3), $Has::Length.EqualTo(3))
     $Assert::That((Test-Delegate { throw New-Object NotImplementedException }), $Throws::TypeOf([NotImplementedException])) }
 
+**$Assert::That** returns unexpected results for boolean values, so it is recommended to use
+
+    $Assert::IsTrue($boolValue)
+    $Assert::IsFalse($boolValue)
+
+instead
+
 ## To run tests ##
 
 Just execute
