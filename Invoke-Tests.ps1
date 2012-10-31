@@ -7,9 +7,9 @@ param
 
 $script:ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
-$PSScriptRoot = $MyInvocation.MyCommand.Path | Split-Path
+function PSScriptRoot { $MyInvocation.ScriptName | Split-Path }
 
-$poshUnitFolder = if (Test-Path "$PSScriptRoot\PoshUnit.Dev.txt") { $PSScriptRoot } else { "$PSScriptRoot\packages\PoshUnit" }
+$poshUnitFolder = if (Test-Path "$(PSScriptRoot)\PoshUnit.Dev.txt") { $(PSScriptRoot) } else { "$(PSScriptRoot)\packages\PoshUnit" }
 
 $poshUnitModuleFile = "$poshUnitFolder\PoshUnit.psm1"
 
