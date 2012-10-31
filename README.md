@@ -77,16 +77,6 @@ Just execute
 
     Invoke-Tests.ps1
 
-or if you want to have more control
-
-Import module
-    
-	Import-Module .\PoshUnit.psm1
-
-Then run tests use
-    
-    Invoke-PoshUnit
-
 ***Optional parameters:***
 
 **-Path**
@@ -113,6 +103,13 @@ Default value: $true
 
 Default value: $false
 
+**-TestFixtureFilter**
+
+Default value: "*"
+
+**-TestFilter**
+
+Default value: "*"
 
 ## Known issues ##
 
