@@ -47,3 +47,7 @@ Test-NUnit { $Assert::That(@(1, 2, 3), $Has::Length.EqualTo(5)) }
 Test-NUnit { $Assert::That((Test-Delegate { 2 + 2 }), $Throws::Nothing) }
 Test-NUnit { $Assert::That((Test-Delegate { throw "Some exception" }), $Throws::Nothing) }
 Test-NUnit { $Assert::That((Test-Delegate { throw New-Object NotImplementedException }), $Throws::TypeOf([NotImplementedException])) }
+Test-NUnit { $Assert::IsTrue($true) }
+Test-NUnit { $Assert::IsTrue($false) }
+Test-NUnit { $Assert::IsFalse($true) }
+Test-NUnit { $Assert::IsFalse($false) }
